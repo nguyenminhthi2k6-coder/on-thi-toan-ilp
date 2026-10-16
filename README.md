@@ -1,35 +1,44 @@
-# Hệ thống tối ưu hóa kế hoạch ôn thi môn Toán bằng Quy hoạch Tuyến tính nguyên (ILP)
+name: Deploy to GitHub Pages
 
-Ứng dụng React + Vite + Tailwind CSS, giải bài toán ngay trên trình duyệt bằng `javascript-lp-solver`; không cần backend.
+on:
+  push:
+    branches: [ main ]
 
-## Chạy trên máy
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-Cần cài Node.js 18+.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
-```bash
-npm install
-npm run dev
-```
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-Mở URL mà Vite hiển thị trong terminal.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-## Build bản triển khai
+      - name: Install dependencies
+        run: npm install
 
-```bash
-npm run build
-npm run preview
-```
+      - name: Build
+        run: npm run build
 
-Thư mục `dist/` là bản build có thể triển khai lên dịch vụ hosting frontend tĩnh.
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
 
-## Tính năng
-
-- Nhập số câu sai và tùy chỉnh hệ số của 8 chuyên đề.
-- Tải dữ liệu mẫu: `[4, 3, 4, 2, 3, 3, 2, 1]`.
-- Tối ưu số lần làm 4 loại tài liệu với biến nguyên, giới hạn số lần và mục tiêu tổng thời gian nhỏ nhất.
-- Bảng đối soát chỉ tiêu, thực tế đạt, chênh lệch và tỷ lệ đáp ứng.
-- Xuất/in lộ trình qua hộp thoại in của trình duyệt; chọn “Save as PDF / Lưu thành PDF”.
-
-## Lưu ý mô hình
-
-Tỷ lệ đáp ứng của chuyên đề có chỉ tiêu bằng 0 được hiển thị là 100% nếu không có yêu cầu bù. Nghiệm tối ưu có thể có nhiều phương án đồng tối ưu; ứng dụng hiển thị một phương án mà bộ giải trả về.
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
